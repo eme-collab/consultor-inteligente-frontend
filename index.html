@@ -99,6 +99,13 @@
     function appendMessage(message, sender) {
         const isUser = sender === 'user';
         const formattedMessage = message.replace(/\n/g, '<br>');
+
+        if (typeof message !== 'string') {
+            console.error("Erro: a função appendMessage recebeu uma mensagem que não é texto. Valor recebido:", message);
+            // Define uma mensagem de fallback para o usuário
+            message = "Desculpe, ocorreu um erro ao processar a resposta. Tente novamente.";
+        }
+        
         const messageWrapper = document.createElement('div');
         messageWrapper.className = `flex items-start gap-3 ${isUser ? 'justify-end' : ''}`;
         const bubbleClass = isUser ? 'message-bubble-user' : 'message-bubble-assistant';

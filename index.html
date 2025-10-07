@@ -19,6 +19,15 @@
         .typing-indicator span:nth-child(2) { animation-delay: .6666s; }
         .typing-indicator span:nth-child(3) { animation-delay: .9999s; }
         @keyframes blink { 50% { opacity: 1; } }
+
+        /* --- NOVO ESTILO PARA O CARROSSEL --- */
+        .card-carousel {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+        .card-carousel::-webkit-scrollbar {
+            display: none; /* Chrome, Safari and Opera */
+        }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen">
@@ -31,7 +40,7 @@
                 <span class="absolute bottom-0 right-0 block h-3 w-3 rounded-full bg-green-400 border-2 border-[#1e1e3a]"></span>
             </div>
             <div class="ml-4">
-                <h1 class="text-lg font-bold text-white">O Cara da TI</h1>
+                <h1 class="text-lg font-bold text-white">Consultor Inteligente</h1>
                 <p class="text-sm text-green-400">Online</p>
             </div>
         </header>
@@ -92,39 +101,36 @@
         } catch (error) {
             console.error(error);
             removeTypingIndicator();
-            appendMessage('Desculpe, algo deu errado. O erro de CORS indica que a API (back-end) não foi atualizada corretamente. Por favor, verifique o deploy da API no Render.com.', 'assistant');
+            appendMessage('Desculpe, algo deu errado. Ocorreu um problema de comunicação com o servidor. Por favor, tente novamente mais tarde.', 'assistant');
         }
     });
 
     function appendMessage(message, sender) {
         const isUser = sender === 'user';
-        let formattedMessage = message.replace(/\n/g, '<br>');
-
+        
         if (typeof message !== 'string') {
             console.error("Erro: a função appendMessage recebeu uma mensagem que não é texto. Valor recebido:", message);
-            // Define uma mensagem de fallback para o usuário
             message = "Desculpe, ocorreu um erro ao processar a resposta. Tente novamente.";
         }
         
         const messageWrapper = document.createElement('div');
         messageWrapper.className = `flex items-start gap-3 ${isUser ? 'justify-end' : ''}`;
-        const bubbleClass = isUser ? 'message-bubble-user' : 'message-bubble-assistant';
-        const bubbleRadius = isUser ? 'rounded-tr-none' : 'rounded-tl-none';
+        
+        const bubbleContent = document.createElement('div');
+        bubbleContent.className = `text-white p-3 rounded-lg max-w-md ${isUser ? 'message-bubble-user rounded-tr-none' : 'message-bubble-assistant rounded-tl-none'}`;
+        bubbleContent.innerHTML = message;
+
         const assistantAvatar = `
             <div class="w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-full bg-gradient-to-tr from-blue-500 to-purple-600">
                 <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
             </div>
         `;
-        formattedMessage = typeof message === 'string'
-          ? message.replace(/\n/g, '<br>')
-          : JSON.stringify(message);
 
-        messageWrapper.innerHTML = `
-            ${!isUser ? assistantAvatar : ''}
-            <div class="${bubbleClass} text-white p-3 rounded-lg ${bubbleRadius} max-w-md">
-                <div>${formattedMessage}</div>
-            </div>
-        `;
+        if (!isUser) {
+            messageWrapper.innerHTML = assistantAvatar;
+        }
+        messageWrapper.appendChild(bubbleContent);
+        
         chatContainer.appendChild(messageWrapper);
         scrollToBottom();
     }
@@ -158,4 +164,3 @@
 </script>
 </body>
 </html>
-

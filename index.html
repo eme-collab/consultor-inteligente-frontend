@@ -19,8 +19,7 @@
         .typing-indicator span:nth-child(2) { animation-delay: .6666s; }
         .typing-indicator span:nth-child(3) { animation-delay: .9999s; }
         @keyframes blink { 50% { opacity: 1; } }
-
-        /* --- NOVO ESTILO PARA O CARROSSEL --- */
+        /* Estilo para o carrossel (ocultar barra de rolagem) */
         .card-carousel {
             -ms-overflow-style: none;  /* IE and Edge */
             scrollbar-width: none;  /* Firefox */
@@ -113,23 +112,43 @@
             message = "Desculpe, ocorreu um erro ao processar a resposta. Tente novamente.";
         }
         
-        const messageWrapper = document.createElement('div');
-        messageWrapper.className = `flex items-start gap-3 ${isUser ? 'justify-end' : ''}`;
+        // Verifica se a mensagem é do assistente e se contém o carrossel de cards
+        const isCarousel = !isUser && message.includes("card-carousel");
         
-        const bubbleContent = document.createElement('div');
-        bubbleContent.className = `text-white p-3 rounded-lg max-w-md ${isUser ? 'message-bubble-user rounded-tr-none' : 'message-bubble-assistant rounded-tl-none'}`;
-        bubbleContent.innerHTML = message;
-
-        const assistantAvatar = `
+        const messageWrapper = document.createElement('div');
+        
+        const assistantAvatarHTML = `
             <div class="w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-full bg-gradient-to-tr from-blue-500 to-purple-600">
                 <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
             </div>
         `;
 
-        if (!isUser) {
-            messageWrapper.innerHTML = assistantAvatar;
+        if (isUser) {
+            messageWrapper.className = 'flex items-start gap-3 justify-end';
+            messageWrapper.innerHTML = `
+                <div class="message-bubble-user text-white p-3 rounded-lg rounded-tr-none max-w-md">
+                    <div>${message}</div>
+                </div>
+            `;
+        } else if (isCarousel) {
+            // Layout VERTICAL: avatar em cima, carrossel em baixo ocupando 100% da largura
+            messageWrapper.className = 'flex flex-col items-start gap-2';
+            messageWrapper.innerHTML = `
+                ${assistantAvatarHTML}
+                <div class="w-full">
+                    ${message}
+                </div>
+            `;
+        } else {
+            // Layout PADRÃO: avatar ao lado da mensagem
+            messageWrapper.className = 'flex items-start gap-3';
+            messageWrapper.innerHTML = `
+                ${assistantAvatarHTML}
+                <div class="message-bubble-assistant text-white p-3 rounded-lg rounded-tl-none max-w-md">
+                    <div>${message}</div>
+                </div>
+            `;
         }
-        messageWrapper.appendChild(bubbleContent);
         
         chatContainer.appendChild(messageWrapper);
         scrollToBottom();
@@ -164,3 +183,4 @@
 </script>
 </body>
 </html>
+

@@ -98,7 +98,7 @@
 
     function appendMessage(message, sender) {
         const isUser = sender === 'user';
-        const formattedMessage = message.replace(/\n/g, '<br>');
+        let formattedMessage = message.replace(/\n/g, '<br>');
 
         if (typeof message !== 'string') {
             console.error("Erro: a função appendMessage recebeu uma mensagem que não é texto. Valor recebido:", message);

@@ -77,12 +77,20 @@
         appendMessage(userMessage, 'user');
         messageInput.value = '';
         showTypingIndicator();
+
+        // INÍCIO DA MEDIÇÃO
+        console.time("Tempo Total de Resposta (Frontend)");
+
         try {
             const response = await fetch(apiUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ query: userMessage })
             });
+
+            // FIM DA MEDIÇÃO
+            console.timeEnd("Tempo Total de Resposta (Frontend)");
+
             removeTypingIndicator();
             if (!response.ok) {
                 const errorData = await response.json().catch(() => null);
@@ -95,6 +103,9 @@
             console.error(error);
             removeTypingIndicator();
             appendMessage('Desculpe, algo correu mal. Ocorreu um problema de comunicação com o servidor. Por favor, tente novamente mais tarde.', 'assistant');
+
+            // Certifique-se de parar o timer em caso de erro também
+            console.timeEnd("Tempo Total de Resposta (Frontend)");
         }
     });
 

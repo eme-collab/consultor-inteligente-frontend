@@ -70,16 +70,38 @@
     const chatContainer = document.getElementById('chat-container');
     const apiUrl = 'https://consultor-inteligente-api.onrender.com/consultar';
 
+    // NOVO: Inicializa o histórico de mensagens, tentando carregar do localStorage
+    let chatHistory = JSON.parse(localStorage.getItem('chatHistory')) || [];
+
+    // NOVO: Função para salvar o histórico no localStorage
+    function saveHistory() {
+        localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
+    }
+
+    // NOVO: Evento que dispara quando a página carrega para exibir o histórico
+    window.addEventListener('DOMContentLoaded', () => {
+        // Remove a mensagem inicial padrão, pois vamos carregar o histórico
+        const initialMessage = chatContainer.querySelector('.flex.items-start.gap-3');
+        if (initialMessage && chatHistory.length > 0) {
+            initialMessage.remove();
+        }
+        
+        chatHistory.forEach(message => {
+            // Apenas recria as mensagens na tela, sem adicionar ao histórico novamente
+            appendMessage(message.content, message.sender, false);
+        });
+    });
+
     chatForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const userMessage = messageInput.value.trim();
         if (!userMessage) return;
+        
+        // Agora, a função appendMessage salvará a mensagem
         appendMessage(userMessage, 'user');
+        
         messageInput.value = '';
         showTypingIndicator();
-
-        // INÍCIO DA MEDIÇÃO
-        console.time("Tempo Total de Resposta (Frontend)");
 
         try {
             const response = await fetch(apiUrl, {
@@ -87,10 +109,6 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ query: userMessage })
             });
-
-            // FIM DA MEDIÇÃO
-            console.timeEnd("Tempo Total de Resposta (Frontend)");
-
             removeTypingIndicator();
             if (!response.ok) {
                 const errorData = await response.json().catch(() => null);
@@ -98,18 +116,25 @@
                 throw new Error(`Erro na API: ${errorMessage}`);
             }
             const data = await response.json();
+            
+            // A função appendMessage também salvará a resposta do assistente
             appendMessage(data.response, 'assistant');
+
         } catch (error) {
             console.error(error);
             removeTypingIndicator();
             appendMessage('Desculpe, algo correu mal. Ocorreu um problema de comunicação com o servidor. Por favor, tente novamente mais tarde.', 'assistant');
-
-            // Certifique-se de parar o timer em caso de erro também
-            console.timeEnd("Tempo Total de Resposta (Frontend)");
         }
     });
 
-    function appendMessage(message, sender) {
+    // MODIFICADO: A função agora tem um parâmetro opcional 'save'
+    function appendMessage(message, sender, save = true) {
+        // NOVO: Se 'save' for true, adiciona a mensagem ao nosso array de histórico
+        if (save) {
+            chatHistory.push({ sender: sender, content: message });
+            saveHistory(); // E salva no localStorage
+        }
+
         const isUser = sender === 'user';
         if (typeof message !== 'string') {
             console.error("Erro: a função appendMessage recebeu uma mensagem que não é texto.", message);
@@ -118,21 +143,26 @@
         
         const isInteractive = !isUser && message.includes("interactive-results");
         const messageWrapper = document.createElement('div');
-        const assistantAvatarHTML = `<div class="w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-full bg-gradient-to-tr from-blue-500 to-purple-600"><svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div>`;
+        // ... (resto da sua função appendMessage para criar o HTML da mensagem continua igual)
+        // ... (o código para criar messageWrapper, assistantAvatarHTML, etc., permanece o mesmo)
 
         if (isUser) {
             messageWrapper.className = 'flex items-start gap-3 justify-end';
             messageWrapper.innerHTML = `<div class="message-bubble-user text-white p-3 rounded-lg rounded-tr-none max-w-md"><div>${message}</div></div>`;
         } else if (isInteractive) {
+            // O código para renderizar resultados interativos continua o mesmo
+            const assistantAvatarHTML = `<div class="w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-full bg-gradient-to-tr from-blue-500 to-purple-600"><svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div>`;
             messageWrapper.className = 'flex flex-col items-start gap-2';
             messageWrapper.innerHTML = `${assistantAvatarHTML}<div class="w-full">${message}</div>`;
         } else {
+            const assistantAvatarHTML = `<div class="w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-full bg-gradient-to-tr from-blue-500 to-purple-600"><svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div>`;
             messageWrapper.className = 'flex items-start gap-3';
             messageWrapper.innerHTML = `${assistantAvatarHTML}<div class="message-bubble-assistant text-white p-3 rounded-lg rounded-tl-none max-w-md"><div>${message}</div></div>`;
         }
         
         chatContainer.appendChild(messageWrapper);
-
+        
+        // ... (o código para adicionar listeners aos botões interativos continua o mesmo)
         if (isInteractive) {
             const newContent = messageWrapper.querySelector('.interactive-results');
             const viewToggles = newContent.querySelectorAll('.view-toggle-button');
@@ -162,8 +192,11 @@
                 });
             });
         }
+        
         scrollToBottom();
     }
+    
+    // As funções showTypingIndicator, removeTypingIndicator e scrollToBottom continuam as mesmas
 
     function showTypingIndicator() {
         const indicator = document.createElement('div');
@@ -182,6 +215,7 @@
     function scrollToBottom() {
         chatContainer.scrollTop = chatContainer.scrollHeight;
     }
+    
 </script>
 </body>
 </html>

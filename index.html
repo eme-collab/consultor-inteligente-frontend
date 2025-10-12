@@ -168,13 +168,19 @@
             const viewToggles = newContent.querySelectorAll('.view-toggle-button');
             const accordionToggles = newContent.querySelectorAll('.accordion-toggle');
 
+            // Dentro da função appendMessage, no bloco "if (isInteractive)"
             viewToggles.forEach(button => {
                 button.addEventListener('click', () => {
                     const targetViewId = button.dataset.view;
+                    // Esconde todas as visões
                     newContent.querySelector('#view-carousel').classList.add('hidden');
                     newContent.querySelector('#view-accordion').classList.add('hidden');
+                    newContent.querySelector('#view-table').classList.add('hidden'); // Garante que a tabela também seja escondida
+
+                    // Mostra apenas a visão alvo
                     newContent.querySelector(`#view-${targetViewId}`).classList.remove('hidden');
 
+                    // Atualiza a aparência dos botões
                     viewToggles.forEach(btn => {
                         btn.classList.remove('active-view-button');
                         btn.classList.add('inactive-view-button');
